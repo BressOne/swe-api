@@ -1,22 +1,33 @@
-interface Reading {
-  // TODO: change this to contain whatever information is needed
-}
+import { DataEntry, ParamTypes } from "./types";
 
-// This is a fake database which stores data in-memory while the process is running
-// Feel free to change the data structure to anything else you would like
-const database: Record<string, Reading> = {};
+const database: Record<string, Record<string, Omit<DataEntry, 'param'>>> = {};
 
-/**
- * Store a reading in the database using the given key
- */
-export const addReading = (key: string, reading: Reading): Reading => {
-  database[key] = reading;
+export const addReading = (collection: ParamTypes, key: string, reading: Omit<DataEntry, 'param'>): Omit<DataEntry, 'param'> => {
+  if (database[collection]) {
+    database[collection][key] = reading;
+  } else {
+    database[collection] = { [key]: reading };
+  }
   return reading;
 };
 
-/**
- * Retrieve a reading from the database using the given key
- */
-export const getReading = (key: string): Reading | undefined => {
-  return database[key];
+export const addReadings = (collection: ParamTypes, bulk: { key: string, reading: Omit<DataEntry, 'param'> }[]) => {
+
+  if (!database[collection]) {
+    database[collection] = {};
+  }
+
+  bulk.forEach(({ key, reading }) => {
+    database[collection][key] = reading
+  })
+
+  return bulk;
 };
+
+export const getReading = (collection: ParamTypes, key: string): Omit<DataEntry, 'param'> | undefined =>
+  database[collection] ? database[collection][key] : undefined
+
+export const getReadings = (collection: ParamTypes, filter: (el: Omit<DataEntry, 'param'>) => boolean): Omit<DataEntry, 'param'>[] => {
+  return Object.values(database[collection]).filter(filter)
+}
+
